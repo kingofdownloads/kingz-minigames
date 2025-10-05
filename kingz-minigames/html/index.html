@@ -1,0 +1,240 @@
+local QBCore = exports['qb-core']:GetCoreObject()
+local isMinigameActive = false
+local minigameResult = nil
+
+-- Debug print function
+local function debugPrint(...)
+    if Config.Debug then
+        print('[kingz-minigames]', ...)
+    end
+end
+
+-- Function to open NUI
+local function openMinigame(game, options)
+    if isMinigameActive then return false end
+    
+    isMinigameActive = true
+    minigameResult = nil
+    
+    -- Show cursor and set focus
+    SetNuiFocus(true, true)
+    
+    -- Send data to NUI
+    SendNUIMessage({
+        action = 'open',
+        game = game,
+        options = options
+    })
+    
+    debugPrint('Opening minigame:', game)
+    return true
+end
+
+-- Function to close NUI
+local function closeMinigame(success)
+    if not isMinigameActive then return end
+    
+    isMinigameActive = false
+    SetNuiFocus(false, false)
+    
+    debugPrint('Closing minigame, result:', success)
+    return success
+end
+
+-- Lockpick minigame
+function Lockpick(options, cb)
+    -- Merge default options with provided options
+    local settings = {}
+    for k, v in pairs(Config.Defaults.Lockpick) do
+        settings[k] = (options and options[k] ~= nil) and options[k] or v
+    end
+    
+    -- Open minigame
+    if not openMinigame('lockpick', settings) then
+        if cb then cb(false) end
+        return false
+    end
+    
+    -- Wait for result
+    CreateThread(function()
+        while isMinigameActive do
+            Wait(100)
+        end
+        
+        if cb then cb(minigameResult) end
+    end)
+    
+    return true
+end
+
+-- Wire cutting minigame
+function WireCut(options, cb)
+    -- Merge default options with provided options
+    local settings = {}
+    for k, v in pairs(Config.Defaults.WireCut) do
+        settings[k] = (options and options[k] ~= nil) and options[k] or v
+    end
+    
+    -- Open minigame
+    if not openMinigame('wirecut', settings) then
+        if cb then cb(false) end
+        return false
+    end
+    
+    -- Wait for result
+    CreateThread(function()
+        while isMinigameActive do
+            Wait(100)
+        end
+        
+        if cb then cb(minigameResult) end
+    end)
+    
+    return true
+end
+
+-- Safe hacking minigame
+function SafeHack(options, cb)
+    -- Merge default options with provided options
+    local settings = {}
+    for k, v in pairs(Config.Defaults.SafeHack) do
+        settings[k] = (options and options[k] ~= nil) and options[k] or v
+    end
+    
+    -- Open minigame
+    if not openMinigame('safehack', settings) then
+        if cb then cb(false) end
+        return false
+    end
+    
+    -- Wait for result
+    CreateThread(function()
+        while isMinigameActive do
+            Wait(100)
+        end
+        
+        if cb then cb(minigameResult) end
+    end)
+    
+    return true
+end
+
+-- Memory game
+function MemoryGame(options, cb)
+    -- Merge default options with provided options
+    local settings = {}
+    for k, v in pairs(Config.Defaults.MemoryGame) do
+        settings[k] = (options and options[k] ~= nil) and options[k] or v
+    end
+    
+    -- Open minigame
+    if not openMinigame('memorygame', settings) then
+        if cb then cb(false) end
+        return false
+    end
+    
+    -- Wait for result
+    CreateThread(function()
+        while isMinigameActive do
+            Wait(100)
+        end
+        
+        if cb then cb(minigameResult) end
+    end)
+    
+    return true
+end
+
+-- Skill Bar minigame
+function SkillBar(options, cb)
+    -- Merge default options with provided options
+    local settings = {}
+    for k, v in pairs(Config.Defaults.SkillBar) do
+        settings[k] = (options and options[k] ~= nil) and options[k] or v
+    end
+    
+    -- Open minigame
+    if not openMinigame('skillbar', settings) then
+        if cb then cb(false) end
+        return false
+    end
+    
+    -- Wait for result
+    CreateThread(function()
+        while isMinigameActive do
+            Wait(100)
+        end
+        
+        if cb then cb(minigameResult) end
+    end)
+    
+    return true
+end
+
+-- NUI Callbacks
+RegisterNUICallback('close', function(data, cb)
+    minigameResult = data.success
+    closeMinigame(data.success)
+    if cb then cb('ok') end
+end)
+
+-- Force close handler for emergency situations
+RegisterNUICallback('forceClose', function(data, cb)
+    SetNuiFocus(false, false)
+    isMinigameActive = false
+    if cb then cb('ok') end
+end)
+
+-- Handle sound effects
+RegisterNUICallback('playSound', function(data, cb)
+    local soundName = data.sound
+    
+    if soundName == 'success' then
+        PlaySound(-1, "Pin_Good", "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", 0, 0, 1)
+    elseif soundName == 'fail' then
+        PlaySound(-1, "Pin_Bad", "DLC_HEIST_BIOLAB_PREP_HACKING_SOUNDS", 0, 0, 1)
+    elseif soundName == 'move' then
+        PlaySound(-1, "CLICK_BACK", "WEB_NAVIGATION_SOUNDS_PHONE", 0, 0, 1)
+    elseif soundName == 'unlock' then
+        PlaySound(-1, "TUMBLER_TURN", "SAFE_CRACK_SOUNDSET", 0, 0, 1)
+    elseif soundName == 'cut' then
+        PlaySound(-1, "CLICK_BACK", "WEB_NAVIGATION_SOUNDS_PHONE", 0, 0, 1)
+    elseif soundName == 'perfect' then
+        PlaySound(-1, "PICK_UP", "HUD_FRONTEND_DEFAULT_SOUNDSET", 0, 0, 1)
+    end
+    
+    if cb then cb('ok') end
+end)
+
+-- Test commands
+if Config.Debug then
+    RegisterCommand('testlockpick', function()
+        Lockpick(nil, function(success)
+            print('Lockpick result:', success)
+        end)
+    end)
+    
+    RegisterCommand('testwirecut', function()
+        WireCut(nil, function(success)
+            print('WireCut result:', success)
+        end)
+    end)
+    
+    RegisterCommand('testsafehack', function()
+        SafeHack(nil, function(success)
+            print('SafeHack result:', success)
+        end)
+    end)
+    
+    RegisterCommand('testmemorygame', function()
+        MemoryGame(nil, function(success)
+            print('MemoryGame result:', success)
+        end)
+    end)
+    
+    RegisterCommand('testskillbar', function()
+        SkillBar(nil, function(success)
+            print('SkillBar result:', success)
+        end)
+    end)
+end
