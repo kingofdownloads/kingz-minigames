@@ -16,23 +16,37 @@ local playerPerks = {}
 
 -- Function to refresh skill cache
 local function RefreshSkillCache()
-    if not Config.UseSkills then return end
+    if not Config.UseSkills then 
+        return 
+    end
     
     -- Get skill levels from kingz-skills
-    skillCache.hacking = exports['kingz-skills']:GetSkillLevel(PlayerId(), 'hacking') or 0
-    skillCache.lockpicking = exports['kingz-skills']:GetSkillLevel(PlayerId(), 'lockpicking') or 0
-    skillCache.electronics = exports['kingz-skills']:GetSkillLevel(PlayerId(), 'electronics') or 0
-    skillCache.drilling = exports['kingz-skills']:GetSkillLevel(PlayerId(), 'drilling') or 0
+    local hasSkillSystem = pcall(function()
+        skillCache.hacking = exports['kingz-skills']:GetSkillLevel(PlayerId(), 'hacking') or 0
+        skillCache.lockpicking = exports['kingz-skills']:GetSkillLevel(PlayerId(), 'lockpicking') or 0
+        skillCache.electronics = exports['kingz-skills']:GetSkillLevel(PlayerId(), 'electronics') or 0
+        skillCache.drilling = exports['kingz-skills']:GetSkillLevel(PlayerId(), 'drilling') or 0
+    end)
+    
+    if not hasSkillSystem then
+        print("Warning: kingz-skills not found or GetSkillLevel function not available")
+        return
+    end
     
     -- Get player perks
-    if exports['kingz-skills']:Perks_Has then
-        playerPerks = {
-            master_hacker = exports['kingz-skills']:Perks_Has(PlayerId(), 'master_hacker'),
-            firewall_specialist = exports['kingz-skills']:Perks_Has(PlayerId(), 'firewall_specialist'),
-            locksmith = exports['kingz-skills']:Perks_Has(PlayerId(), 'locksmith'),
-            circuit_wizard = exports['kingz-skills']:Perks_Has(PlayerId(), 'circuit_wizard'),
-            master_driller = exports['kingz-skills']:Perks_Has(PlayerId(), 'master_driller')
-        }
+    local hasPerkSystem = pcall(function()
+        local perksFunction = exports['kingz-skills'].Perks_Has
+        if perksFunction then
+            playerPerks.master_hacker = exports['kingz-skills']:Perks_Has(PlayerId(), 'master_hacker') or false
+            playerPerks.firewall_specialist = exports['kingz-skills']:Perks_Has(PlayerId(), 'firewall_specialist') or false
+            playerPerks.locksmith = exports['kingz-skills']:Perks_Has(PlayerId(), 'locksmith') or false
+            playerPerks.circuit_wizard = exports['kingz-skills']:Perks_Has(PlayerId(), 'circuit_wizard') or false
+            playerPerks.master_driller = exports['kingz-skills']:Perks_Has(PlayerId(), 'master_driller') or false
+        end
+    end)
+    
+    if not hasPerkSystem then
+        print("Warning: kingz-skills perks system not found or Perks_Has function not available")
     end
 end
 
